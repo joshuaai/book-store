@@ -1,11 +1,11 @@
 # Help for React + Redux Bookstore App
-Check our the [README](README.md) for set up guide. This project also has a [help file](help.md).
+Check our the [README](README.md) for set up guide.
 
 ## React Redux Workflow
 Below is the typical flow for react-redux apps
 
 ### Create Components with Routing
-* Add the UI/Presentation/Stateless components, `Home`, `About` in the `src/components/common` folder and `Book` folder.
+* Add the UI/Presentation/Stateless components, `Home`, `About` in the `src/components/common` folder and `BookPage` in the `src/components/book` folder.
 * Create a root component, `App` in the `src/components` folder. This is also a UI component that renders the child pages above.
 * Create the `src/routes.js` file to specify the handling of all the routes.
 * Wrap the routes in the react-router's `Router` component and import any global files such as Bootstrap CSS:
@@ -56,6 +56,10 @@ export default ( state = [], action ) => {
   }
 }
 ```
+When the store dispatches an action, all the reducers are called, and the switch statement determines which action to perform.
+
+### Combine All Reducers
+Because Reducers cannot stand alone, they have to be put together (combined) and passed as one to the store through the `root reducer`.
 * In the `src/reducers/index.js` file, import the reducers:
 ```js
 // Set up your root reducer here...
@@ -66,9 +70,102 @@ export default combineReducers({
   books
 });
 ```
-When the store dispatches an action, all the reducers are called, and the switch statement determines which action to perform.
 
-4. Combine All Reducers
-5. Configure the Store with `createStore`
-6. Provide store to root component
-7. Connect Container to Redux with `connect()`
+### Configure the Store with `createStore`
+We create and configure the store with the root reducer, the initial state and middleware if any.
+* In the `src/store/configureStore.js` file, replace the contents with:
+```js
+import { createStore } from 'redux';
+import rootReducer from '../reducers';
+
+export default function configureStore(initialState) {
+  return createStore(rootReducer, initialState);
+}
+```
+The `createStore` method is wrapped in an exported function `configureStore` which we will later use to configure provider.
+
+### Provide store to root component
+The `Provider` component from `react-redux` provides provides the Redux store's API methods such as `store.dispatch()`, `store.subscribe()` and `store.getState()`. 
+
+All we have to do now is to wrap our entry point component in `src/index.js` with the `Provider`:
+```js
+import { Provider } from 'react-redux';
+import configureStore from './store/configureStore';
+const store = configureStore();
+
+render(
+  <Provider store={store} >
+    <Router routes={routes} history={browserHistory} />
+  </Provider>, 
+  document.getElementById('app')
+);
+```
+
+### Connect Container to Redux with `connect()`
+We need to pass down the states to our components' props, same goes with the actions.
+
+Best practice demands that we do this in container components while convention demands that we use `mapStateToProps` for states and `mapDispatchToProps` for actions.
+
+We update the `BookPage` container component as follows:
+```js
+import React from 'react';
+import { connect } from 'react-redux';
+import * as bookActions from '../../actions/bookActions';
+
+class Book extends React.Component {
+  constructor(props) {
+    super(props);
+  }
+
+  submitBook(input) {
+    this.props.createBook(input);
+  }
+
+  render() {
+    let titleInput;
+
+    return (
+      <div>
+        <h3>Books</h3>
+        <ul>
+          {}
+          {this.props.books.map( (b, i) => <li key={i}> {b.title} </li> )}
+        </ul>
+        <div>
+          <h3>Book Form</h3>
+          <form onSubmit={ e => { 
+            e.preventDefault(); 
+            var input = { title: titleInput.value };
+            this.submitBook(input);
+            e.target.reset();  
+          }}>
+            <input type="text" name="title" ref={node => titleInput = node} />
+            <input type="submit" />
+          </form>
+        </div>      
+      </div>
+    )
+  }
+}
+
+const mapStateToProps = (state) => {
+  return {
+    books: state.books
+  }
+};
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+    createBook: book => dispatch(bookActions.createBook(book))
+  }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(Book);
+```
+
+`mapStateToProps` now makes it possible to access the books state with `this.props.books`.
+
+`mapDispatchToProps` also returns an object for the respective dispatched actions. The values are functions which will be called when the actions are dispatched. 
+
+The `connect` method now takes in these 2 functions and returns another functions. The returned function is now
+passed in the container component. 

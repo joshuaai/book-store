@@ -1,5 +1,5 @@
 # React + Redux Bookstore Boilerplate
-The boilerplate for this code is from the popular [React Slingshot](https://github.com/coryhouse/react-slingshot)
+The boilerplate for this code is from the popular [React Slingshot](https://github.com/coryhouse/react-slingshot). This project also has a [help file](help.md).
 ```bash
 git clone https://github.com/coryhouse/react-slingshot.git book-store
 npm run setup
