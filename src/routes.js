@@ -8,8 +8,8 @@ import App from './components/App';
 
 export default (
   <Route path="/" component={App}>
-    <IndexRoute component={Home}></IndexRoute>
-    <Route path="/about" component={About}></Route>
-    <Route path="/books" component={Book}></Route>
+    <IndexRoute component={Home} />
+    <Route path="/about" component={About} />
+    <Route path="/books" component={Book} />
   </Route>
 );
