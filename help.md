@@ -235,4 +235,4 @@ const store = configureStore();
 store.dispatch(bookActions.fetchBooks());
 ```
 
-We basically repeat this process for other actions and reducers. Check out [this commit] for the final implementation of the app.  
+We basically repeat this process for other actions and reducers. Check out [this commit](https://github.com/joshuaai/book-store/commit/5adafcfffa1ee74f6f63591adffa157f0a6ed583) for the final implementation of the app.  
