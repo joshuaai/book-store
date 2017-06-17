@@ -1,5 +1,5 @@
 # Help for React + Redux Bookstore App
-Check our the [README](README.md) for set up guide.
+Check out the [README](README.md) for set up guide.
 
 ## React Redux Workflow
 Below is the typical flow for react-redux apps
@@ -169,3 +169,70 @@ export default connect(mapStateToProps, mapDispatchToProps)(Book);
 
 The `connect` method now takes in these 2 functions and returns another functions. The returned function is now
 passed in the container component. 
+
+## Async Requests with Thunk
+Redux Thunk is a middle ware for handling async requests in a React Redux environment.
+
+### Setup Redux Thunk
+This is as easy as adding updating the `src/store/configureStore.js` as follows:
+```js
+import { createStore, compose, applyMiddleware } from 'redux';
+import thunk from 'redux-thunk';
+import rootReducer from '../reducers';
+
+export default function configureStore(initialState) {
+  return createStore(rootReducer, initialState, applyMiddleware(thunk));
+}
+```
+
+### Thunk Basics
+For our `bookActions.js` file, we will have synchronous and async actions. 
+* An *action creator* is a function that creates an action - either sync or async.
+* Each async action creator returns a `dispatcher` function that must return a promise. The promise when resolved, dispatches a synchronous action to handle the data that was returned.
+```bash
+npm install axios --save
+```
+The `src/actions/bookActions.js` file now becomes:
+```js
+import Axios from 'axios';
+
+// API URL
+const apiUrl = 'http://59453bfccf46400011a81298.mockapi.io/api/book';
+
+// Sync Action
+export const fetchBooksSuccess = (books) => {
+  return {
+    type: 'FETCH_BOOKS_SUCCESS',
+    books
+  }
+};
+
+//Async Action
+export const fetchBooks = () => {
+  // Returns a dispatcher function
+  // that dispatches an action at a later time
+  return (dispatch) => {
+    // Returns a promise
+    return Axios.get(apiUrl)
+      .then(response => {
+        // Dispatch another action to consume data
+        dispatch(fetchBooksSuccess(response.data))
+      })
+      .catch(error => {
+        throw(error);
+      });
+  };
+};
+```
+Note that *_SUCCESS* is appended to *FETCH_BOOKS* to indicate that the books were retrieved successfully. To handle other use cases such as errors, we can dispatch *FETCH_BOOKS_ERROR* in the error callback or *FETCH_BOOKS_LOADING* before the request to indicate an ongoing request.
+
+* Update the reducer to handle the new async action
+* To start the application with some state, we dispatch the `FETCH_BOOKS` action on page load in the `src/index.js` file:
+```js
+import * as bookActions from './actions/bookActions';
+
+const store = configureStore();
+store.dispatch(bookActions.fetchBooks());
+```
+
+We basically repeat this process for other actions and reducers. Check out [this commit] for the final implementation of the app.  
